@@ -22,7 +22,7 @@ class ViewModel(
             is DragAndDropState.Success -> {
                 viewModelState.value = State.Loading
                 coroutineScope.launch(ioDispatcher) {
-                    val json = readFile(state.filePath)
+                    val json = readFile(state.file)
                     viewModelState.value = if(json != null) {
                         State.Content(json)
                     } else {
@@ -35,8 +35,8 @@ class ViewModel(
         }
     }
 
-    private fun readFile(filePath: String): String? {
-        return File(filePath)
+    private fun readFile(file: File): String? {
+        return file
             .takeIf { it.exists() && it.isFile && it.extension in supportedFileTypes }
             ?.readText()
     }

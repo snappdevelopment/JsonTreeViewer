@@ -9,8 +9,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.draganddrop.DragAndDropEvent
 import androidx.compose.ui.draganddrop.DragAndDropTarget
-import androidx.compose.ui.draganddrop.DragData
-import androidx.compose.ui.draganddrop.dragData
+import androidx.compose.ui.draganddrop.awtTransferable
+import java.awt.datatransfer.DataFlavor
+import java.io.File
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -18,7 +19,7 @@ fun rememberDragAndDropTarget(
     onDragAndDropStateChanged: (DragAndDropState) -> Unit
 ): DragAndDropTarget {
     var dragAndDropState by remember {
-        mutableStateOf<DragAndDropState>(DragAndDropState.Initial(hoveringState = DragAndDropState.HoveringState.NONE))
+        mutableStateOf<DragAndDropState>(DragAndDropState.Initial(isHovering = false))
     }
 
     LaunchedEffect(dragAndDropState) {
@@ -30,34 +31,42 @@ fun rememberDragAndDropTarget(
 
             override fun onStarted(event: DragAndDropEvent) {
                 val state = dragAndDropState
-                if(state is DragAndDropState.Initial) {
-                    dragAndDropState = state.copy(hoveringState = DragAndDropState.HoveringState.SUPPORTED)
+                dragAndDropState = when(state) {
+                    is DragAndDropState.Initial -> state.copy(isHovering = true)
+                    is DragAndDropState.Success -> state.copy(isHovering = true)
+                    is DragAndDropState.Failure -> state.copy(isHovering = true)
                 }
             }
 
             override fun onEnded(event: DragAndDropEvent) {
                 val state = dragAndDropState
-                if(state is DragAndDropState.Initial) {
-                    dragAndDropState = state.copy(hoveringState = DragAndDropState.HoveringState.NONE)
+                dragAndDropState = when(state) {
+                    is DragAndDropState.Initial -> state.copy(isHovering = false)
+                    is DragAndDropState.Success -> state.copy(isHovering = false)
+                    is DragAndDropState.Failure -> state.copy(isHovering = false)
                 }
             }
 
             override fun onDrop(event: DragAndDropEvent): Boolean {
-                val filePath = getFilePath(event)
-                if(filePath != null) {
-                    dragAndDropState = DragAndDropState.Success(filePath = filePath)
+                val file = getFile(event)
+                if(file != null) {
+                    dragAndDropState = DragAndDropState.Success(
+                        file = file,
+                        isHovering = false
+                    )
                     return true
                 } else {
-                    dragAndDropState = DragAndDropState.Failure
+                    dragAndDropState = DragAndDropState.Failure(isHovering = false)
                     return false
                 }
             }
 
-            private fun getFilePath(event: DragAndDropEvent): String? {
-                val dragData = event.dragData()
-                return if(dragData is DragData.FilesList) {
-                    dragData.readFiles().firstOrNull()
-                } else {
+            private fun getFile(event: DragAndDropEvent): File? {
+                val transferable = event.awtTransferable
+                return try {
+                    val files = transferable.getTransferData(DataFlavor.javaFileListFlavor) as List<File>
+                    files.firstOrNull()
+                } catch (e: Throwable) {
                     null
                 }
             }
@@ -67,19 +76,18 @@ fun rememberDragAndDropTarget(
 
 sealed interface DragAndDropState {
 
+    val isHovering: Boolean
+
     data class Initial(
-        val hoveringState: HoveringState
+        override val isHovering: Boolean
     ): DragAndDropState
 
     data class Success(
-        val filePath: String
+        val file: File,
+        override val isHovering: Boolean
     ): DragAndDropState
 
-    data object Failure: DragAndDropState
-
-    enum class HoveringState {
-        NONE,
-        SUPPORTED,
-        UNSUPPORTED
-    }
+    data class Failure(
+        override val isHovering: Boolean
+    ): DragAndDropState
 }
