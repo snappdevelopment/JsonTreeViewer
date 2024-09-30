@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
@@ -18,11 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.sebastianneubauer.jsontree.JsonTree
 import com.sebastianneubauer.jsontreeviewer.ui.DragAndDropBox
 import com.sebastianneubauer.jsontreeviewer.ui.DragAndDropState
 import com.sebastianneubauer.jsontreeviewer.ui.rememberDragAndDropTarget
 import jsontreeviewer.composeapp.generated.resources.Res
-import jsontreeviewer.composeapp.generated.resources.error
+import jsontreeviewer.composeapp.generated.resources.error_drag_and_drop
+import jsontreeviewer.composeapp.generated.resources.error_file_read
+import jsontreeviewer.composeapp.generated.resources.error_json_parser
 import jsontreeviewer.composeapp.generated.resources.initial_drag_and_drop
 import jsontreeviewer.composeapp.generated.resources.plus_circle_outline
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -34,7 +38,8 @@ import org.jetbrains.compose.resources.vectorResource
 fun App(viewModel: ViewModel) {
     AppUi(
         state = viewModel.state.value,
-        onDragAndDropStateChanged = viewModel::updateDragAndDropState
+        onDragAndDropStateChanged = viewModel::updateDragAndDropState,
+        onJsonParsingError = viewModel::showJsonParsingError
     )
 }
 
@@ -42,7 +47,8 @@ fun App(viewModel: ViewModel) {
 @Composable
 private fun AppUi(
     state: Contract.State,
-    onDragAndDropStateChanged: (DragAndDropState) -> Unit
+    onDragAndDropStateChanged: (DragAndDropState) -> Unit,
+    onJsonParsingError: (Throwable) -> Unit,
 ) {
     var isHovering by remember { mutableStateOf(false) }
 
@@ -63,10 +69,36 @@ private fun AppUi(
             when(state) {
                 is Contract.State.Initial -> Initial(isHovering = isHovering)
                 is Contract.State.Loading -> Loading(isHovering = isHovering)
-                is Contract.State.Error -> Error(isHovering = isHovering)
-                is Contract.State.Content -> Unit
+                is Contract.State.Error -> Error(error = state.error, isHovering = isHovering)
+                is Contract.State.Content -> Content(json = state.json, onJsonParsingError = onJsonParsingError)
             }
         }
+    }
+}
+
+@Composable
+private fun Content(
+    json: String,
+    onJsonParsingError: (Throwable) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp)
+    ) {
+        JsonTree(
+            modifier = Modifier.fillMaxSize(),
+            json = json,
+            onLoading = {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = Color.Blue
+                    )
+                }
+            },
+            onError = onJsonParsingError
+        )
     }
 }
 
@@ -107,13 +139,31 @@ private fun Loading(
 
 @Composable
 private fun Error(
+    error: Contract.ErrorType,
     isHovering: Boolean
 ) {
     DragAndDropBox(isHovering = isHovering) {
-        Text(
-            text = stringResource(Res.string.error),
-            textAlign = TextAlign.Center,
-            color = Color.Gray
-        )
+        Column(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = when(error) {
+                    is Contract.ErrorType.JsonParserError -> stringResource(Res.string.error_json_parser)
+                    is Contract.ErrorType.DataDragAndDropError -> stringResource(Res.string.error_drag_and_drop)
+                    is Contract.ErrorType.FileReadError -> stringResource(Res.string.error_file_read)
+                },
+                textAlign = TextAlign.Center,
+                color = Color.Gray
+            )
+
+            if(error is Contract.ErrorType.JsonParserError) {
+                Text(
+                    text = error.message,
+                    textAlign = TextAlign.Center,
+                    color = Color.Gray
+                )
+            }
+        }
     }
 }

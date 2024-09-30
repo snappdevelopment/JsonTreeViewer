@@ -4,6 +4,7 @@ import androidx.compose.runtime.State as ComposeState
 import androidx.compose.runtime.mutableStateOf
 import com.sebastianneubauer.jsontreeviewer.Contract.State
 import com.sebastianneubauer.jsontreeviewer.ui.DragAndDropState
+import jsontreeviewer.composeapp.generated.resources.Res
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -26,13 +27,19 @@ class ViewModel(
                     viewModelState.value = if(json != null) {
                         State.Content(json)
                     } else {
-                        State.Error
+                        State.Error(error = Contract.ErrorType.FileReadError)
                     }
                 }
             }
-            is DragAndDropState.Failure -> viewModelState.value = State.Error
+            is DragAndDropState.Failure -> viewModelState.value = State.Error(error = Contract.ErrorType.DataDragAndDropError)
             else -> Unit
         }
+    }
+
+    fun showJsonParsingError(throwable: Throwable) {
+        viewModelState.value = State.Error(
+            error = Contract.ErrorType.JsonParserError(message = throwable.localizedMessage)
+        )
     }
 
     private fun readFile(file: File): String? {

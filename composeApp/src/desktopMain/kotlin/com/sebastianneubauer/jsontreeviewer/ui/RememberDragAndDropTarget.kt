@@ -64,8 +64,8 @@ fun rememberDragAndDropTarget(
             private fun getFile(event: DragAndDropEvent): File? {
                 val transferable = event.awtTransferable
                 return try {
-                    val files = transferable.getTransferData(DataFlavor.javaFileListFlavor) as List<File>
-                    files.firstOrNull()
+                    val files = transferable.getTransferData(DataFlavor.javaFileListFlavor) as List<*>
+                    files.filterIsInstance<File>().firstOrNull()
                 } catch (e: Throwable) {
                     null
                 }
