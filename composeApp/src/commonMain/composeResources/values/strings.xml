@@ -1,0 +1,3 @@
+<resources>
+    <string name="initial_drag_and_drop">Drag and drop a .json or .txt file.</string>
+</resources>
