@@ -4,4 +4,9 @@
     <string name="error_file_read">Could not read file!\nPlease try to drop a .json or .txt file\nwhich contains valid Json data</string>
     <string name="error_drag_and_drop">Could not get file!\nPlease try to drop a .json or .txt file</string>
     <string name="error_json_parser">Could not parse Json data!</string>
+    <string name="stats_filename">Name: %1$s</string>
+    <string name="stats_filepath">Path: %1$s</string>
+    <string name="stats_filesize">Size: %1$s</string>
+    <string name="stats_filelines">Lines: %1$s</string>
+    <string name="stats_filereadtime">Read time: %1$s</string>
 </resources>
