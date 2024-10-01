@@ -14,7 +14,6 @@ class ViewModel(
     private val coroutineScope: CoroutineScope,
     private val ioDispatcher: CoroutineDispatcher
 ) {
-
     private var viewModelState = mutableStateOf<State>(State.Initial)
     val state: ComposeState<State> = viewModelState
 
@@ -32,7 +31,6 @@ class ViewModel(
                 }
             }
             is DragAndDropState.Failure -> viewModelState.value = State.Error(error = Contract.ErrorType.DataDragAndDropError)
-            else -> Unit
         }
     }
 

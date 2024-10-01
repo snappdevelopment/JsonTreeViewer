@@ -52,10 +52,10 @@ private fun AppUi(
 ) {
     var isHovering by remember { mutableStateOf(false) }
 
-    val dragAndDropTarget = rememberDragAndDropTarget { dragAndDropState ->
-        onDragAndDropStateChanged(dragAndDropState)
-        isHovering = dragAndDropState.isHovering
-    }
+    val dragAndDropTarget = rememberDragAndDropTarget(
+        onDragAndDropStateChanged = onDragAndDropStateChanged,
+        onHoveringChanged = { isHovering = it }
+    )
 
     MaterialTheme {
         Box(
@@ -84,7 +84,8 @@ private fun Content(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp)
+            .padding(horizontal = 32.dp)
+            .padding(top = 32.dp)
     ) {
         JsonTree(
             modifier = Modifier.fillMaxSize(),

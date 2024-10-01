@@ -16,49 +16,30 @@ import java.io.File
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun rememberDragAndDropTarget(
-    onDragAndDropStateChanged: (DragAndDropState) -> Unit
+    onDragAndDropStateChanged: (DragAndDropState) -> Unit,
+    onHoveringChanged: (Boolean) -> Unit,
 ): DragAndDropTarget {
-    var dragAndDropState by remember {
-        mutableStateOf<DragAndDropState>(DragAndDropState.Initial(isHovering = false))
-    }
-
-    LaunchedEffect(dragAndDropState) {
-        onDragAndDropStateChanged(dragAndDropState)
-    }
 
     return remember {
         object: DragAndDropTarget {
 
             override fun onStarted(event: DragAndDropEvent) {
-                val state = dragAndDropState
-                dragAndDropState = when(state) {
-                    is DragAndDropState.Initial -> state.copy(isHovering = true)
-                    is DragAndDropState.Success -> state.copy(isHovering = true)
-                    is DragAndDropState.Failure -> state.copy(isHovering = true)
-                }
+                onHoveringChanged(true)
             }
 
             override fun onEnded(event: DragAndDropEvent) {
-                val state = dragAndDropState
-                dragAndDropState = when(state) {
-                    is DragAndDropState.Initial -> state.copy(isHovering = false)
-                    is DragAndDropState.Success -> state.copy(isHovering = false)
-                    is DragAndDropState.Failure -> state.copy(isHovering = false)
-                }
+                onHoveringChanged(false)
             }
 
             override fun onDrop(event: DragAndDropEvent): Boolean {
                 val file = getFile(event)
-                if(file != null) {
-                    dragAndDropState = DragAndDropState.Success(
-                        file = file,
-                        isHovering = false
-                    )
-                    return true
+                val newState = if(file != null) {
+                    DragAndDropState.Success(file = file)
                 } else {
-                    dragAndDropState = DragAndDropState.Failure(isHovering = false)
-                    return false
+                    DragAndDropState.Failure
                 }
+                onDragAndDropStateChanged(newState)
+                return newState is DragAndDropState.Success
             }
 
             private fun getFile(event: DragAndDropEvent): File? {
@@ -76,18 +57,7 @@ fun rememberDragAndDropTarget(
 
 sealed interface DragAndDropState {
 
-    val isHovering: Boolean
+    data class Success(val file: File): DragAndDropState
 
-    data class Initial(
-        override val isHovering: Boolean
-    ): DragAndDropState
-
-    data class Success(
-        val file: File,
-        override val isHovering: Boolean
-    ): DragAndDropState
-
-    data class Failure(
-        override val isHovering: Boolean
-    ): DragAndDropState
+    data object Failure: DragAndDropState
 }
