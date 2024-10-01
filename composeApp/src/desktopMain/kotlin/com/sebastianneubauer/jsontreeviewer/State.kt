@@ -6,7 +6,7 @@ object Contract {
         data object Initial: State
         data object Loading: State
         data class Error(val error: ErrorType): State
-        data class Content(val json: String): State
+        data class Content(val json: String, val stats: Stats): State
     }
 
     sealed class ErrorType {
@@ -14,6 +14,14 @@ object Contract {
         data object FileReadError: ErrorType()
         data class JsonParserError(val message: String): ErrorType()
     }
+
+    data class Stats(
+        val filePath: String,
+        val fileName: String,
+        val fileSize: String,
+        val fileReadTime: String,
+        val fileLines: String,
+    )
 }
 
 val supportedFileTypes = listOf("json", "txt")

@@ -4,11 +4,14 @@ import androidx.compose.runtime.State as ComposeState
 import androidx.compose.runtime.mutableStateOf
 import com.sebastianneubauer.jsontreeviewer.Contract.State
 import com.sebastianneubauer.jsontreeviewer.ui.DragAndDropState
-import jsontreeviewer.composeapp.generated.resources.Res
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.io.path.Path
+import kotlin.io.path.fileSize
+import kotlin.time.DurationUnit
+import kotlin.time.measureTimedValue
 
 class ViewModel(
     private val coroutineScope: CoroutineScope,
@@ -22,12 +25,29 @@ class ViewModel(
             is DragAndDropState.Success -> {
                 viewModelState.value = State.Loading
                 coroutineScope.launch(ioDispatcher) {
-                    val json = readFile(state.file)
-                    viewModelState.value = if(json != null) {
-                        State.Content(json)
-                    } else {
-                        State.Error(error = Contract.ErrorType.FileReadError)
-                    }
+                    val newState = state.file
+                        .takeIf { it.exists() && it.isFile && it.extension in supportedFileTypes }
+                        ?.let { validFile ->
+                            val (json, time) = measureTimedValue {
+                                validFile.readText()
+                            }
+
+                            val fileSize = validFile.toPath().fileSize() / 1024F
+
+                            State.Content(
+                                json = json,
+                                stats = Contract.Stats(
+                                    filePath = validFile.path,
+                                    fileName = validFile.name,
+                                    fileSize = "%.2f".format(fileSize) + "KB",
+                                    fileReadTime = time.toString(unit = DurationUnit.MILLISECONDS, decimals = 3),
+                                    fileLines = json.lines().count().toString()
+                                )
+                            )
+                        }
+                        ?: State.Error(error = Contract.ErrorType.FileReadError)
+
+                    viewModelState.value = newState
                 }
             }
             is DragAndDropState.Failure -> viewModelState.value = State.Error(error = Contract.ErrorType.DataDragAndDropError)
@@ -38,11 +58,5 @@ class ViewModel(
         viewModelState.value = State.Error(
             error = Contract.ErrorType.JsonParserError(message = throwable.localizedMessage)
         )
-    }
-
-    private fun readFile(file: File): String? {
-        return file
-            .takeIf { it.exists() && it.isFile && it.extension in supportedFileTypes }
-            ?.readText()
     }
 }
