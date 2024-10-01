@@ -134,7 +134,7 @@ private fun Loading(
     isHovering: Boolean
 ) {
     DragAndDropBox(isHovering = isHovering) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(color = Color.Blue)
     }
 }
 
