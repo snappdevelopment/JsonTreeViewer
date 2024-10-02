@@ -8,14 +8,17 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
+import java.time.Clock
 import kotlin.io.path.Path
 import kotlin.io.path.fileSize
 import kotlin.time.DurationUnit
+import kotlin.time.TimeSource
 import kotlin.time.measureTimedValue
 
 class ViewModel(
     private val coroutineScope: CoroutineScope,
-    private val ioDispatcher: CoroutineDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
+    private val timeSource: TimeSource,
 ) {
     private var viewModelState = mutableStateOf<State>(State.Initial)
     val state: ComposeState<State> = viewModelState
@@ -28,10 +31,7 @@ class ViewModel(
                     val newState = state.file
                         .takeIf { it.exists() && it.isFile && it.extension in supportedFileTypes }
                         ?.let { validFile ->
-                            val (json, time) = measureTimedValue {
-                                validFile.readText()
-                            }
-
+                            val (json, time) = timeSource.measureTimedValue { validFile.readText() }
                             val fileSize = validFile.toPath().fileSize() / 1024F
 
                             State.Content(
