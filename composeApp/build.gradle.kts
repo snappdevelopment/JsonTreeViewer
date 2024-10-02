@@ -40,11 +40,28 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "com.sebastianneubauer.jsontreeviewer.MainKt"
+        buildTypes.release {
+            proguard {
+                configurationFiles.from("compose-desktop.pro")
+            }
+        }
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.sebastianneubauer.jsontreeviewer"
+            packageName = "JsonTreeViewer"
             packageVersion = "1.0.0"
+            description = "JsonTreeViewer"
+            copyright = "2024 SNAD. All rights reserved."
+
+            macOS {
+                iconFile.set(project.file("icon.icns"))
+            }
+            windows {
+                iconFile.set(project.file("icon.ico"))
+            }
+            linux {
+                iconFile.set(project.file("icon.png"))
+            }
         }
     }
 }
