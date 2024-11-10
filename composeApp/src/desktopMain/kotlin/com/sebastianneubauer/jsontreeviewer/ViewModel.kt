@@ -1,19 +1,22 @@
 package com.sebastianneubauer.jsontreeviewer
 
-import androidx.compose.runtime.State as ComposeState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
 import com.sebastianneubauer.jsontreeviewer.Contract.State
 import com.sebastianneubauer.jsontreeviewer.ui.DragAndDropState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.io.File
-import java.time.Clock
-import kotlin.io.path.Path
+import java.awt.Toolkit
+import java.awt.datatransfer.DataFlavor
 import kotlin.io.path.fileSize
 import kotlin.time.DurationUnit
 import kotlin.time.TimeSource
 import kotlin.time.measureTimedValue
+import androidx.compose.runtime.State as ComposeState
 
 class ViewModel(
     private val coroutineScope: CoroutineScope,
@@ -51,6 +54,36 @@ class ViewModel(
                 }
             }
             is DragAndDropState.Failure -> viewModelState.value = State.Error(error = Contract.ErrorType.DataDragAndDropError)
+        }
+    }
+
+    fun onKeyEvent(event: KeyEvent): Boolean {
+        return if (event.isCtrlPressed && event.key == Key.V) {
+            val clipboardString = try {
+                Toolkit.getDefaultToolkit()
+                    .systemClipboard
+                    .getData(DataFlavor.stringFlavor) as String
+            } catch (e: Exception) {
+                null
+            }
+
+            viewModelState.value = if(clipboardString != null) {
+                State.Content(
+                    json = clipboardString,
+                    stats = Contract.Stats(
+                        filePath = "from clipboard",
+                        fileName = "n/a",
+                        fileSize = "n/a",
+                        fileReadTime = "n/a",
+                        fileLines = clipboardString.lines().count().toString()
+                    )
+                )
+            } else {
+                State.Error(error = Contract.ErrorType.CopyPasteError)
+            }
+            true
+        } else {
+            false
         }
     }
 

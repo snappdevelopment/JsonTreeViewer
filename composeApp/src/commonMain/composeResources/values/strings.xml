@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">JsonTreeViewer</string>
-    <string name="initial_drag_and_drop">Drag and drop a .json or .txt file</string>
+    <string name="initial_drag_and_drop">Drag and drop a .json or .txt file\nor\npaste with ctrl+v</string>
+    <string name="error_copy_paste_read">Could not read content from clipboard!\nPlease try to copy and paste a valid Json string</string>
     <string name="error_file_read">Could not read file!\nPlease try to drop a .json or .txt file\nwhich contains valid Json data</string>
     <string name="error_drag_and_drop">Could not get file!\nPlease try to drop a .json or .txt file</string>
     <string name="error_json_parser">Could not parse Json data!</string>

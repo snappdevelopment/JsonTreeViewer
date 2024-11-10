@@ -12,6 +12,7 @@ object Contract {
     sealed class ErrorType {
         data object DataDragAndDropError: ErrorType()
         data object FileReadError: ErrorType()
+        data object CopyPasteError: ErrorType()
         data class JsonParserError(val message: String): ErrorType()
     }
 

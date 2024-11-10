@@ -1,7 +1,6 @@
 package com.sebastianneubauer.jsontreeviewer
 
 import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowDecoration
 import androidx.compose.ui.window.application
 import jsontreeviewer.composeapp.generated.resources.Res
 import jsontreeviewer.composeapp.generated.resources.app_name
@@ -22,6 +21,7 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         title = stringResource(Res.string.app_name),
+        onKeyEvent = { viewModel.onKeyEvent(it) }
     ) {
         App(viewModel = viewModel)
     }
