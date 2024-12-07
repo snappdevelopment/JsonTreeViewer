@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import com.sebastianneubauer.jsontreeviewer.Contract.State
 import com.sebastianneubauer.jsontreeviewer.ui.DragAndDropState
@@ -58,7 +59,7 @@ class ViewModel(
     }
 
     fun onKeyEvent(event: KeyEvent): Boolean {
-        return if (event.isCtrlPressed && event.key == Key.V) {
+        return if ((event.isCtrlPressed || event.isMetaPressed) && event.key == Key.V) {
             val clipboardString = try {
                 Toolkit.getDefaultToolkit()
                     .systemClipboard
