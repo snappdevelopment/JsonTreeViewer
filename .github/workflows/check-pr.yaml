@@ -22,7 +22,7 @@ jobs:
           java-version: '17'
 
       - name: Compile for Jvm
-        run: ./gradlew compileKotlinJvm --stacktrace
+        run: ./gradlew :composeApp:build --stacktrace
 
   test:
     runs-on: macos-latest
@@ -39,4 +39,4 @@ jobs:
           java-version: '17'
 
       - name: Run tests
-        run: ./gradlew :composeApp:jvmTest --tests com.sebastianneubauer.jsontreeviewer.ViewModelTest --stacktrace
+        run: ./gradlew :composeApp:desktopTest --tests com.sebastianneubauer.jsontreeviewer.ViewModelTest --stacktrace
