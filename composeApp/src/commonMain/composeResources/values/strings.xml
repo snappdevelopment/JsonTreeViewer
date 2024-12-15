@@ -10,4 +10,5 @@
     <string name="stats_filesize">Size: %1$s</string>
     <string name="stats_filelines">Lines: %1$s</string>
     <string name="stats_filereadtime">Read time: %1$s</string>
+    <string name="search_label">Search Key/Value</string>
 </resources>
