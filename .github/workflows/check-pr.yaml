@@ -1,0 +1,25 @@
+name: Check PR
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  buildJvm:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Compile for Jvm
+        run: ./gradlew :composeApp:build --stacktrace
