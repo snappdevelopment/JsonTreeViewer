@@ -1,7 +1,4 @@
-<h1 style="display: flex; align-items: center;">
-  <img src="composeApp/icon.png" height="48" style="margin-right: 8px;" alt="Icon">
-  JsonTreeViewer
-</h1>
+# JsonTreeViewer
 
 ![](https://img.shields.io/badge/Platform-MacOS|Windows|Linux-blue)
 <br /><br />
