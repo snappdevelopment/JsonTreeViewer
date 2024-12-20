@@ -4,7 +4,7 @@ compose-plugin = "1.7.0-beta02"
 junit = "4.13.2"
 kotlin = "2.0.20"
 kotlinx-coroutines = "1.8.1"
-jsontree = "2.3.0"
+jsontree = "2.5.0-SNAPSHOT"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
