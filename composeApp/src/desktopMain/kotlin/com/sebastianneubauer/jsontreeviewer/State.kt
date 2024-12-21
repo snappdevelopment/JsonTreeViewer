@@ -4,6 +4,7 @@ object Contract {
 
     sealed interface State {
         data object Initial: State
+        data object InitialLoading: State
         data object Loading: State
         data class Error(val error: ErrorType): State
         data class Content(val json: String, val stats: Stats): State

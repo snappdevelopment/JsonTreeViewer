@@ -103,7 +103,8 @@ private fun AppUi(
         ) {
             when(state) {
                 is Contract.State.Initial -> Initial(isHovering = isHovering)
-                is Contract.State.Loading -> Loading(isHovering = isHovering)
+                is Contract.State.InitialLoading -> InitialLoading(isHovering = isHovering)
+                is Contract.State.Loading -> Loading()
                 is Contract.State.Error -> Error(error = state.error, isHovering = isHovering)
                 is Contract.State.Content -> Content(json = state.json, stats = state.stats, onJsonParsingError = onJsonParsingError)
             }
@@ -183,14 +184,10 @@ private fun Content(
                 modifier = Modifier.weight(1F),
                 json = json,
                 searchState = searchState,
-                onLoading = {
-                    Box(modifier = Modifier.weight(1F)) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = Color.Blue
-                        )
-                    }
-                },
+                showIndices = true,
+                showItemCount = true,
+                expandSingleChildren = true,
+                onLoading = { Loading() },
                 onError = onJsonParsingError
             )
 
@@ -231,11 +228,21 @@ private fun Initial(
 }
 
 @Composable
-private fun Loading(
+private fun InitialLoading(
     isHovering: Boolean
 ) {
     DragAndDropBox(isHovering = isHovering) {
         CircularProgressIndicator(color = Color.Blue)
+    }
+}
+
+@Composable
+private fun Loading() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        CircularProgressIndicator(
+            modifier = Modifier.align(Alignment.Center),
+            color = Color.Blue
+        )
     }
 }
 
