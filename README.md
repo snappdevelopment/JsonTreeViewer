@@ -5,11 +5,14 @@
 JsonTreeViewer is a Compose Multiplatform desktop app to display JSON data. It's based on the library [JsonTree](https://github.com/snappdevelopment/JsonTree).
 <br /><br />
 
+<img src="screenshots/jsonTreeViewerGif.gif">
+
 ## About
 
 JsonTreeViewer is an Compose Multiplatform desktop app to display formatted JSON data.
 
-The tree can be expanded and collapsed as well as show additional metadata.
+The tree can be expanded and collapsed and show additional metadata like array indices and item counts in arrays and object. By using the search field, the tree can be search for keys and values. The info panel shows data about the json file itself.
+
 Files with the extension `.json` and `.txt` can be opened via drag and drop, or data can be pasted directly with `ctrl+v` or `cmd+v`.
 
 ## Download

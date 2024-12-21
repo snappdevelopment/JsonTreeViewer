@@ -26,35 +26,44 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sebastianneubauer.jsontree.JsonTree
+import com.sebastianneubauer.jsontree.search.rememberSearchState
 import com.sebastianneubauer.jsontreeviewer.ui.DragAndDropBox
 import com.sebastianneubauer.jsontreeviewer.ui.DragAndDropState
 import com.sebastianneubauer.jsontreeviewer.ui.rememberDragAndDropTarget
 import jsontreeviewer.composeapp.generated.resources.Res
-import jsontreeviewer.composeapp.generated.resources.chart_box_outline
 import jsontreeviewer.composeapp.generated.resources.error_copy_paste_read
 import jsontreeviewer.composeapp.generated.resources.error_drag_and_drop
 import jsontreeviewer.composeapp.generated.resources.error_file_read
 import jsontreeviewer.composeapp.generated.resources.error_json_parser
 import jsontreeviewer.composeapp.generated.resources.initial_drag_and_drop
 import jsontreeviewer.composeapp.generated.resources.plus_circle_outline
+import jsontreeviewer.composeapp.generated.resources.search_label
 import jsontreeviewer.composeapp.generated.resources.stats_filelines
 import jsontreeviewer.composeapp.generated.resources.stats_filename
 import jsontreeviewer.composeapp.generated.resources.stats_filepath
 import jsontreeviewer.composeapp.generated.resources.stats_filereadtime
 import jsontreeviewer.composeapp.generated.resources.stats_filesize
-import org.jetbrains.compose.resources.painterResource
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -94,7 +103,8 @@ private fun AppUi(
         ) {
             when(state) {
                 is Contract.State.Initial -> Initial(isHovering = isHovering)
-                is Contract.State.Loading -> Loading(isHovering = isHovering)
+                is Contract.State.InitialLoading -> InitialLoading(isHovering = isHovering)
+                is Contract.State.Loading -> Loading()
                 is Contract.State.Error -> Error(error = state.error, isHovering = isHovering)
                 is Contract.State.Content -> Content(json = state.json, stats = state.stats, onJsonParsingError = onJsonParsingError)
             }
@@ -108,72 +118,85 @@ private fun Content(
     stats: Contract.Stats,
     onJsonParsingError: (Throwable) -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    val searchState = rememberSearchState()
+    val searchQuery by remember(searchState.query) { mutableStateOf(searchState.query.orEmpty()) }
     var showSidebar by remember { mutableStateOf(false) }
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 32.dp)
-            .padding(top = 32.dp)
+            .padding(top = 32.dp),
     ) {
-        JsonTree(
-            modifier = Modifier.weight(1F),
-            json = json,
-            onLoading = {
-                Box(modifier = Modifier.weight(1F)) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color.Blue
-                    )
-                }
-            },
-            onError = onJsonParsingError
-        )
+        Row {
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchState.query = it },
+                singleLine = true,
+                label = { Text(text = stringResource(Res.string.search_label)) },
+                colors = TextFieldDefaults.textFieldColors(
+                    cursorColor = Color.Gray,
+                    unfocusedLabelColor = Color.Gray,
+                    focusedLabelColor = Color.Gray,
+                    backgroundColor = Color.White,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                )
+            )
 
-        Column {
-            IconButton(
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .background(color = Color.LightGray.copy(alpha = 0.3F), shape = CircleShape),
-                onClick = { showSidebar = !showSidebar },
+            Row(
+                modifier = Modifier.padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    painter = painterResource(Res.drawable.chart_box_outline),
-                    contentDescription = null
+                Button(
+                    icon = Icons.Outlined.KeyboardArrowDown,
+                    onClick = { coroutineScope.launch { searchState.selectNext() } }
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    icon = Icons.Default.KeyboardArrowUp,
+                    onClick = { coroutineScope.launch { searchState.selectPrevious() } }
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = "${searchState.selectedResult}/${searchState.totalResults}",
+                    color = Color.Gray
+                )
+
+                Spacer(modifier = Modifier.weight(1F))
+
+                Button(
+                    icon = Icons.Outlined.Info,
+                    onClick = { showSidebar = !showSidebar }
                 )
             }
+        }
 
-            AnimatedVisibility(
-                visible = showSidebar,
-                enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
-                exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it })
-            ) {
-                Column {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(250.dp)
-                            .padding(bottom = 32.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(color = Color.White)
-                            .border(width = 2.dp, color = Color.Gray, shape = RoundedCornerShape(16.dp))
-                            .padding(16.dp)
-                    ) {
-                        Text(text = stringResource(Res.string.stats_filename, stats.fileName), color = Color.Gray)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = stringResource(Res.string.stats_filepath, stats.filePath), color = Color.Gray)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = stringResource(Res.string.stats_filelines, stats.fileLines), color = Color.Gray)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = stringResource(Res.string.stats_filesize, stats.fileSize), color = Color.Gray)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = stringResource(Res.string.stats_filereadtime, stats.fileReadTime), color = Color.Gray)
-                    }
-                }
+        Spacer(modifier = Modifier.height(16.dp))
 
-            }
+        Row {
+            JsonTree(
+                modifier = Modifier.weight(1F),
+                json = json,
+                searchState = searchState,
+                showIndices = true,
+                showItemCount = true,
+                expandSingleChildren = true,
+                onLoading = { Loading() },
+                onError = onJsonParsingError
+            )
 
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Sidebar(
+                isVisible = showSidebar,
+                stats = stats
+            )
         }
     }
 }
@@ -205,11 +228,21 @@ private fun Initial(
 }
 
 @Composable
-private fun Loading(
+private fun InitialLoading(
     isHovering: Boolean
 ) {
     DragAndDropBox(isHovering = isHovering) {
         CircularProgressIndicator(color = Color.Blue)
+    }
+}
+
+@Composable
+private fun Loading() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        CircularProgressIndicator(
+            modifier = Modifier.align(Alignment.Center),
+            color = Color.Blue
+        )
     }
 }
 
@@ -242,5 +275,59 @@ private fun Error(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun Sidebar(
+    isVisible: Boolean,
+    stats: Contract.Stats,
+) {
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn() + slideInHorizontally(initialOffsetX = { it }),
+        exit = fadeOut() + slideOutHorizontally(targetOffsetX = { it })
+    ) {
+        Column {
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(250.dp)
+                    .padding(bottom = 32.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(color = Color.White)
+                    .border(width = 2.dp, color = Color.Gray, shape = RoundedCornerShape(16.dp))
+                    .padding(16.dp)
+            ) {
+                Text(text = stringResource(Res.string.stats_filename, stats.fileName), color = Color.Gray)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = stringResource(Res.string.stats_filepath, stats.filePath), color = Color.Gray)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = stringResource(Res.string.stats_filelines, stats.fileLines), color = Color.Gray)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = stringResource(Res.string.stats_filesize, stats.fileSize), color = Color.Gray)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = stringResource(Res.string.stats_filereadtime, stats.fileReadTime), color = Color.Gray)
+            }
+        }
+    }
+}
+
+@Composable
+private fun Button(
+    icon: ImageVector,
+    onClick: () -> Unit,
+) {
+    IconButton(
+        modifier = Modifier
+        .size(48.dp)
+        .background(color = Color.LightGray.copy(alpha = 0.3F), shape = CircleShape),
+        onClick = onClick,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null
+        )
     }
 }

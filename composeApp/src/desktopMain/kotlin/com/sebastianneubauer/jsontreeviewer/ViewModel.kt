@@ -30,7 +30,10 @@ class ViewModel(
     fun updateDragAndDropState(state: DragAndDropState) {
         when(state) {
             is DragAndDropState.Success -> {
-                viewModelState.value = State.Loading
+                viewModelState.value = when(viewModelState.value) {
+                    is State.Initial -> State.InitialLoading
+                    else -> State.Loading
+                }
                 coroutineScope.launch(ioDispatcher) {
                     val newState = state.file
                         .takeIf { it.exists() && it.isFile && it.extension in supportedFileTypes }
