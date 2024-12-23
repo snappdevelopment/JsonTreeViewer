@@ -1,5 +1,5 @@
 [versions]
-androidx-lifecycle = "2.8.0"
+androidx-lifecycle = "2.8.4"
 compose-plugin = "1.7.0-beta02"
 junit = "4.13.2"
 kotlin = "2.0.20"
