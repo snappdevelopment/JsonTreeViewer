@@ -23,6 +23,14 @@ Get the latest binary from the [releases page](https://github.com/snappdevelopme
 ```
 ./gradlew :composeApp:packageDistributionForCurrentOS
 ```
+### MacOS
+
+Since this is a hobby project, the macOS app is not signed with a developer ID from Apple. When opening the app, there might pop up a window saying the app can't be opened. If you encounter this issue, then you can try to take the app out of quarantine mode with the following terminal command. Then try opening the app again.
+
+Disable quarantine mode for this app:
+```
+sudo xattr -d com.apple.quarantine /path/to/app/JsonTreeViewer.app
+```
 
 ## License
 
