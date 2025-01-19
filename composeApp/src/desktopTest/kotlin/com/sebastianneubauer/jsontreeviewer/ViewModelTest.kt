@@ -44,6 +44,7 @@ class ViewModelTest {
         assertEquals(
             expected = State.Content(
                 json = json,
+                searchDirection = null,
                 stats = Contract.Stats(
                     filePath = file.path,
                     fileName = file.name,

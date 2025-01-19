@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -106,7 +107,7 @@ private fun AppUi(
                 is Contract.State.InitialLoading -> InitialLoading(isHovering = isHovering)
                 is Contract.State.Loading -> Loading()
                 is Contract.State.Error -> Error(error = state.error, isHovering = isHovering)
-                is Contract.State.Content -> Content(json = state.json, stats = state.stats, onJsonParsingError = onJsonParsingError)
+                is Contract.State.Content -> Content(json = state.json, searchDirection = state.searchDirection, stats = state.stats, onJsonParsingError = onJsonParsingError)
             }
         }
     }
@@ -115,6 +116,7 @@ private fun AppUi(
 @Composable
 private fun Content(
     json: String,
+    searchDirection: Contract.SearchDirection?,
     stats: Contract.Stats,
     onJsonParsingError: (Throwable) -> Unit
 ) {
@@ -122,6 +124,14 @@ private fun Content(
     val searchState = rememberSearchState()
     val searchQuery by remember(searchState.query) { mutableStateOf(searchState.query.orEmpty()) }
     var showSidebar by remember { mutableStateOf(false) }
+
+    LaunchedEffect(searchDirection) {
+        when(searchDirection) {
+            is Contract.SearchDirection.Next -> searchState.selectNext()
+            is Contract.SearchDirection.Previous -> searchState.selectPrevious()
+            null -> Unit
+        }
+    }
 
     Column(
         modifier = Modifier
