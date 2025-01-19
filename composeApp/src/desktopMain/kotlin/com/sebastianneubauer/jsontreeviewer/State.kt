@@ -7,7 +7,7 @@ object Contract {
         data object InitialLoading: State
         data object Loading: State
         data class Error(val error: ErrorType): State
-        data class Content(val json: String, val stats: Stats): State
+        data class Content(val json: String, val stats: Stats, val searchDirection: SearchDirection?): State
     }
 
     sealed class ErrorType {
@@ -15,6 +15,13 @@ object Contract {
         data object FileReadError: ErrorType()
         data object CopyPasteError: ErrorType()
         data class JsonParserError(val message: String): ErrorType()
+    }
+
+    sealed interface SearchDirection {
+        val increment: Int
+
+        data class Next(override val increment: Int): SearchDirection
+        data class Previous(override val increment: Int): SearchDirection
     }
 
     data class Stats(

@@ -43,6 +43,7 @@ class ViewModel(
 
                             State.Content(
                                 json = json,
+                                searchDirection = null,
                                 stats = Contract.Stats(
                                     filePath = validFile.path,
                                     fileName = validFile.name,
@@ -63,32 +64,64 @@ class ViewModel(
 
     fun onKeyEvent(event: KeyEvent): Boolean {
         return if ((event.isCtrlPressed || event.isMetaPressed) && event.key == Key.V) {
-            val clipboardString = try {
-                Toolkit.getDefaultToolkit()
-                    .systemClipboard
-                    .getData(DataFlavor.stringFlavor) as String
-            } catch (e: Exception) {
-                null
-            }
-
-            viewModelState.value = if(clipboardString != null) {
-                State.Content(
-                    json = clipboardString,
-                    stats = Contract.Stats(
-                        filePath = "from clipboard",
-                        fileName = "n/a",
-                        fileSize = "n/a",
-                        fileReadTime = "n/a",
-                        fileLines = clipboardString.lines().count().toString()
-                    )
-                )
-            } else {
-                State.Error(error = Contract.ErrorType.CopyPasteError)
-            }
+            viewModelState.value = getStateFromClipboardData()
             true
+        } else if(event.key == Key.DirectionDown || event.key == Key.Enter) {
+            val newState = getStateFromSearchDirectionEvent(isDownEvent = true)
+            viewModelState.value = newState
+            newState is State.Content
+        } else if(event.key == Key.DirectionUp) {
+            val newState = getStateFromSearchDirectionEvent(isDownEvent = false)
+            viewModelState.value = newState
+            newState is State.Content
         } else {
             false
         }
+    }
+
+    private fun getStateFromClipboardData(): State {
+        val clipboardString = try {
+            Toolkit.getDefaultToolkit()
+                .systemClipboard
+                .getData(DataFlavor.stringFlavor) as String
+        } catch (e: Exception) {
+            null
+        }
+
+        return if(clipboardString != null) {
+            State.Content(
+                json = clipboardString,
+                searchDirection = null,
+                stats = Contract.Stats(
+                    filePath = "from clipboard",
+                    fileName = "n/a",
+                    fileSize = "n/a",
+                    fileReadTime = "n/a",
+                    fileLines = clipboardString.lines().count().toString()
+                )
+            )
+        } else {
+            State.Error(error = Contract.ErrorType.CopyPasteError)
+        }
+    }
+
+    private fun getStateFromSearchDirectionEvent(isDownEvent: Boolean): State {
+        val currentState = viewModelState.value
+        return if(currentState is State.Content) {
+            val currentSearchDirection = currentState.searchDirection
+            val newSearchDirection = if(isDownEvent) {
+                when(currentSearchDirection) {
+                    is Contract.SearchDirection.Next -> currentSearchDirection.copy(increment = currentSearchDirection.increment + 1)
+                    else -> Contract.SearchDirection.Next(increment = 0)
+                }
+            } else {
+                when(currentSearchDirection) {
+                    is Contract.SearchDirection.Previous -> currentSearchDirection.copy(increment = currentSearchDirection.increment + 1)
+                    else -> Contract.SearchDirection.Previous(increment = 0)
+                }
+            }
+            currentState.copy(searchDirection = newSearchDirection)
+        } else currentState
     }
 
     fun showJsonParsingError(throwable: Throwable) {
