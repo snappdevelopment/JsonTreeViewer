@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
@@ -122,6 +123,7 @@ private fun Content(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val searchState = rememberSearchState()
+    val listState = rememberLazyListState()
     val searchQuery by remember(searchState.query) { mutableStateOf(searchState.query.orEmpty()) }
     var showSidebar by remember { mutableStateOf(false) }
 
@@ -130,6 +132,13 @@ private fun Content(
             is Contract.SearchDirection.Next -> searchState.selectNext()
             is Contract.SearchDirection.Previous -> searchState.selectPrevious()
             null -> Unit
+        }
+    }
+
+    val resultIndex = searchState.selectedResultListIndex
+    LaunchedEffect(resultIndex) {
+        if(resultIndex != null && !listState.isScrollInProgress) {
+            listState.animateScrollToItem(resultIndex)
         }
     }
 
@@ -174,7 +183,7 @@ private fun Content(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "${searchState.selectedResult}/${searchState.totalResults}",
+                    text = "${searchState.selectedResultListIndex?.let { it + 1 } ?: 0}/${searchState.totalResults}",
                     color = Color.Gray
                 )
 
@@ -194,6 +203,7 @@ private fun Content(
                 modifier = Modifier.weight(1F),
                 json = json,
                 searchState = searchState,
+                lazyListState = listState,
                 showIndices = true,
                 showItemCount = true,
                 expandSingleChildren = true,
