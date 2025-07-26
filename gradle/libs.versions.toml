@@ -1,10 +1,12 @@
 [versions]
 androidx-lifecycle = "2.8.4"
-compose-plugin = "1.7.3"
+compose-plugin = "1.8.2"
 junit = "4.13.2"
-kotlin = "2.1.0"
+kotlin = "2.1.20"
 kotlinx-coroutines = "1.10.1"
+material-icons = "1.7.3"
 jsontree = "2.5.0"
+hotreload = "1.0.0-beta04"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -12,6 +14,7 @@ kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+material-icons = { group = "org.jetbrains.compose.material", name = "material-icons-extended", version.ref = "material-icons" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 jsontree = { group = "com.sebastianneubauer.jsontree", name = "jsontree", version.ref = "jsontree" }
@@ -20,3 +23,4 @@ jsontree = { group = "com.sebastianneubauer.jsontree", name = "jsontree", versio
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+hotreload = { id = "org.jetbrains.compose.hot-reload", version.ref = "hotreload" }
