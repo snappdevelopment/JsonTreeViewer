@@ -33,6 +33,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,6 +56,8 @@ import com.sebastianneubauer.jsontreeviewer.ui.DragAndDropBox
 import com.sebastianneubauer.jsontreeviewer.ui.DragAndDropState
 import com.sebastianneubauer.jsontreeviewer.ui.rememberDragAndDropTarget
 import jsontreeviewer.composeapp.generated.resources.Res
+import jsontreeviewer.composeapp.generated.resources.display_mode_edit
+import jsontreeviewer.composeapp.generated.resources.display_mode_render
 import jsontreeviewer.composeapp.generated.resources.error_copy_paste_read
 import jsontreeviewer.composeapp.generated.resources.error_drag_and_drop
 import jsontreeviewer.composeapp.generated.resources.error_file_read
@@ -76,7 +81,9 @@ fun App(viewModel: ViewModel) {
     AppUi(
         state = viewModel.state.value,
         onDragAndDropStateChanged = viewModel::updateDragAndDropState,
-        onJsonParsingError = viewModel::showJsonParsingError
+        onJsonParsingError = viewModel::showJsonParsingError,
+        onDisplayModeChanged = viewModel::updateDisplayMode,
+        onJsonChanged = viewModel::updateJson
     )
 }
 
@@ -86,6 +93,8 @@ private fun AppUi(
     state: Contract.State,
     onDragAndDropStateChanged: (DragAndDropState) -> Unit,
     onJsonParsingError: (Throwable) -> Unit,
+    onDisplayModeChanged: (Contract.DisplayMode) -> Unit,
+    onJsonChanged: (String) -> Unit,
 ) {
     var isHovering by remember { mutableStateOf(false) }
 
@@ -108,7 +117,15 @@ private fun AppUi(
                 is Contract.State.InitialLoading -> InitialLoading(isHovering = isHovering)
                 is Contract.State.Loading -> Loading()
                 is Contract.State.Error -> Error(error = state.error, isHovering = isHovering)
-                is Contract.State.Content -> Content(json = state.json, searchDirection = state.searchDirection, stats = state.stats, onJsonParsingError = onJsonParsingError)
+                is Contract.State.Content -> Content(
+                    json = state.json,
+                    searchDirection = state.searchDirection,
+                    stats = state.stats,
+                    displayMode = state.displayMode,
+                    onJsonParsingError = onJsonParsingError,
+                    onDisplayModeChanged = onDisplayModeChanged,
+                    onJsonChanged = onJsonChanged,
+                )
             }
         }
     }
@@ -119,13 +136,17 @@ private fun Content(
     json: String,
     searchDirection: Contract.SearchDirection?,
     stats: Contract.Stats,
-    onJsonParsingError: (Throwable) -> Unit
+    displayMode: Contract.DisplayMode,
+    onJsonParsingError: (Throwable) -> Unit,
+    onDisplayModeChanged: (Contract.DisplayMode) -> Unit,
+    onJsonChanged: (String) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val searchState = rememberSearchState()
     val listState = rememberLazyListState()
     val searchQuery by remember(searchState.query) { mutableStateOf(searchState.query.orEmpty()) }
     var showSidebar by remember { mutableStateOf(false) }
+    var jsonState by remember(json) { mutableStateOf(json) }
 
     LaunchedEffect(searchDirection) {
         when(searchDirection) {
@@ -198,18 +219,52 @@ private fun Content(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row {
-            JsonTree(
-                modifier = Modifier.weight(1F),
-                json = json,
-                searchState = searchState,
-                lazyListState = listState,
-                showIndices = true,
-                showItemCount = true,
-                expandSingleChildren = true,
-                onLoading = { Loading() },
-                onError = onJsonParsingError
+        SingleChoiceSegmentedButtonRow {
+            SegmentedButton(
+                selected = displayMode == Contract.DisplayMode.Render,
+                onClick = { onDisplayModeChanged(Contract.DisplayMode.Render) },
+                shape = RectangleShape,
+                label = { Text(text = stringResource(Res.string.display_mode_render)) },
+                icon = {}
             )
+
+            SegmentedButton(
+                selected = displayMode == Contract.DisplayMode.Edit,
+                onClick = { onDisplayModeChanged(Contract.DisplayMode.Edit) },
+                shape = RectangleShape,
+                label = { Text(text = stringResource(Res.string.display_mode_edit)) },
+                icon = {}
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row {
+            when(displayMode) {
+                Contract.DisplayMode.Render -> {
+                    JsonTree(
+                        modifier = Modifier.weight(1F),
+                        json = json,
+                        searchState = searchState,
+                        lazyListState = listState,
+                        showIndices = true,
+                        showItemCount = true,
+                        expandSingleChildren = true,
+                        onLoading = { Loading() },
+                        onError = onJsonParsingError
+                    )
+                }
+                Contract.DisplayMode.Edit -> {
+                    TextField(
+                        modifier = Modifier.weight(1F),
+                        value = jsonState,
+                        onValueChange = {
+                            jsonState = it
+                            onJsonChanged(it)
+                        }
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 

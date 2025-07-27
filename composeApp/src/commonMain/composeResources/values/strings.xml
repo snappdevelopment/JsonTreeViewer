@@ -11,4 +11,6 @@
     <string name="stats_filelines">Lines: %1$s</string>
     <string name="stats_filereadtime">Read time: %1$s</string>
     <string name="search_label">Search Key/Value</string>
+    <string name="display_mode_render">Render</string>
+    <string name="display_mode_edit">Edit</string>
 </resources>

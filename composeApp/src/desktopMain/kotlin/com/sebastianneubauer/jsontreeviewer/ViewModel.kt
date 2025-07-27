@@ -44,6 +44,7 @@ class ViewModel(
                             State.Content(
                                 json = json,
                                 searchDirection = null,
+                                displayMode = Contract.DisplayMode.Render,
                                 stats = Contract.Stats(
                                     filePath = validFile.path,
                                     fileName = validFile.name,
@@ -64,8 +65,13 @@ class ViewModel(
 
     fun onKeyEvent(event: KeyEvent): Boolean {
         return if ((event.isCtrlPressed || event.isMetaPressed) && event.key == Key.V) {
-            viewModelState.value = getStateFromClipboardData()
-            true
+            val state = viewModelState.value
+            if((state as? State.Content)?.displayMode == Contract.DisplayMode.Edit) {
+                false
+            } else {
+                viewModelState.value = getStateFromClipboardData()
+                true
+            }
         } else if(event.key == Key.DirectionDown || event.key == Key.Enter) {
             val newState = getStateFromSearchDirectionEvent(isDownEvent = true)
             viewModelState.value = newState
@@ -76,6 +82,20 @@ class ViewModel(
             newState is State.Content
         } else {
             false
+        }
+    }
+
+    fun updateDisplayMode(displayMode: Contract.DisplayMode) {
+        val state = viewModelState.value
+        if(state is State.Content) {
+            viewModelState.value = state.copy(displayMode = displayMode)
+        }
+    }
+
+    fun updateJson(json: String) {
+        val state = viewModelState.value
+        if(state is State.Content) {
+            viewModelState.value = state.copy(json = json)
         }
     }
 
@@ -92,6 +112,7 @@ class ViewModel(
             State.Content(
                 json = clipboardString,
                 searchDirection = null,
+                displayMode = Contract.DisplayMode.Render,
                 stats = Contract.Stats(
                     filePath = "from clipboard",
                     fileName = "n/a",

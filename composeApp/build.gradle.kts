@@ -24,6 +24,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.material.icons)
+            implementation(libs.material3)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

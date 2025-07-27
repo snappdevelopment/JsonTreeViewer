@@ -7,7 +7,12 @@ object Contract {
         data object InitialLoading: State
         data object Loading: State
         data class Error(val error: ErrorType): State
-        data class Content(val json: String, val stats: Stats, val searchDirection: SearchDirection?): State
+        data class Content(
+            val json: String,
+            val stats: Stats,
+            val searchDirection: SearchDirection?,
+            val displayMode: DisplayMode
+        ): State
     }
 
     sealed class ErrorType {
@@ -31,6 +36,11 @@ object Contract {
         val fileReadTime: String,
         val fileLines: String,
     )
+
+    enum class DisplayMode {
+        Render,
+        Edit
+    }
 }
 
 val supportedFileTypes = listOf("json", "txt")
