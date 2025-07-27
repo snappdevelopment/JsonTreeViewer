@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SingleChoiceSegmentedButtonRowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -150,8 +151,7 @@ private fun Content(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 32.dp)
-            .padding(top = 32.dp),
+            .padding(32.dp),
     ) {
         Row {
             TextField(
@@ -206,32 +206,16 @@ private fun Content(
         Spacer(modifier = Modifier.height(16.dp))
 
         SingleChoiceSegmentedButtonRow {
-            SegmentedButton(
-                selected = displayMode == Contract.DisplayMode.Render,
+            DisplayModeButton(
+                isSelected = displayMode == Contract.DisplayMode.Render,
                 onClick = { onDisplayModeChanged(Contract.DisplayMode.Render) },
-                shape = RectangleShape,
-                label = { Text(text = stringResource(Res.string.display_mode_render)) },
-                icon = {},
-                colors = SegmentedButtonDefaults.colors().copy(
-                    activeContainerColor = Color.White,
-                    inactiveContainerColor = Color.LightGray.copy(alpha = 0.3F),
-                    activeBorderColor = Color.Gray,
-                    inactiveBorderColor = Color.Gray
-                )
+                text = stringResource(Res.string.display_mode_render),
             )
 
-            SegmentedButton(
-                selected = displayMode == Contract.DisplayMode.Edit,
+            DisplayModeButton(
+                isSelected = displayMode == Contract.DisplayMode.Edit,
                 onClick = { onDisplayModeChanged(Contract.DisplayMode.Edit) },
-                shape = RectangleShape,
-                label = { Text(text = stringResource(Res.string.display_mode_edit)) },
-                icon = {},
-                colors = SegmentedButtonDefaults.colors().copy(
-                    activeContainerColor = Color.White,
-                    inactiveContainerColor = Color.LightGray.copy(alpha = 0.3F),
-                    activeBorderColor = Color.Gray,
-                    inactiveBorderColor = Color.Gray
-                )
+                text = stringResource(Res.string.display_mode_edit),
             )
         }
 
@@ -250,7 +234,9 @@ private fun Content(
                         )
                     } else {
                         JsonTree(
-                            modifier = Modifier.weight(1F),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color = Color.White),
                             json = json,
                             searchState = searchState,
                             lazyListState = listState,
@@ -264,12 +250,13 @@ private fun Content(
                 }
                 Contract.DisplayMode.Edit -> {
                     TextField(
-                        modifier = Modifier.weight(1F),
+                        modifier = Modifier.fillMaxSize(),
                         value = jsonState,
                         onValueChange = {
                             jsonState = it
                             onJsonChanged(it)
                         },
+                        shape = RectangleShape,
                         colors = TextFieldDefaults.textFieldColors(
                             cursorColor = Color.Gray,
                             unfocusedLabelColor = Color.Gray,
@@ -388,4 +375,25 @@ private fun Button(
             contentDescription = null
         )
     }
+}
+
+@Composable
+private fun SingleChoiceSegmentedButtonRowScope.DisplayModeButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    SegmentedButton(
+        selected = isSelected,
+        onClick = onClick,
+        shape = RectangleShape,
+        label = { Text(text = text) },
+        icon = {},
+        colors = SegmentedButtonDefaults.colors().copy(
+            activeContainerColor = Color.LightGray.copy(alpha = 0.3F),
+            inactiveContainerColor = Color.White,
+            activeBorderColor = Color.Gray,
+            inactiveBorderColor = Color.Gray
+        )
+    )
 }
