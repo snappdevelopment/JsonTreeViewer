@@ -52,9 +52,9 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "JsonTreeViewer"
-            packageVersion = "1.0.0"
+            packageVersion = "1.1.0"
             description = "JsonTreeViewer"
-            copyright = "2024 SNAD. All rights reserved."
+            copyright = "2025 SNAD. All rights reserved."
 
             macOS {
                 iconFile.set(project.file("icon.icns"))
