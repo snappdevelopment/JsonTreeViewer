@@ -8,14 +8,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import org.jetbrains.compose.resources.stringResource
-import kotlin.time.TimeSource
 
 fun main() = application {
     val coroutineScope = CoroutineScope(Job())
     val viewModel = ViewModel(
         coroutineScope = coroutineScope,
         ioDispatcher = Dispatchers.IO,
-        timeSource = TimeSource.Monotonic
     )
 
     Window(

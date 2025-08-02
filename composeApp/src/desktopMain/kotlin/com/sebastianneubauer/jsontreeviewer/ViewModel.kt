@@ -13,16 +13,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
-import kotlin.io.path.fileSize
-import kotlin.time.DurationUnit
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
 import androidx.compose.runtime.State as ComposeState
 
 class ViewModel(
     private val coroutineScope: CoroutineScope,
     private val ioDispatcher: CoroutineDispatcher,
-    private val timeSource: TimeSource,
 ) {
     private var viewModelState = mutableStateOf<State>(State.Initial)
     val state: ComposeState<State> = viewModelState
@@ -38,19 +33,12 @@ class ViewModel(
                     val newState = state.file
                         .takeIf { it.exists() && it.isFile && it.extension in supportedFileTypes }
                         ?.let { validFile ->
-                            val (json, time) = timeSource.measureTimedValue { validFile.readText() }
-                            val fileSize = validFile.toPath().fileSize() / 1024F
+                            val json = validFile.readText()
 
                             State.Content(
                                 json = json,
                                 searchDirection = null,
-                                stats = Contract.Stats(
-                                    filePath = validFile.path,
-                                    fileName = validFile.name,
-                                    fileSize = "%.2f".format(fileSize) + "KB",
-                                    fileReadTime = time.toString(unit = DurationUnit.MILLISECONDS, decimals = 3),
-                                    fileLines = json.lines().count().toString()
-                                )
+                                displayMode = Contract.DisplayMode.Render,
                             )
                         }
                         ?: State.Error(error = Contract.ErrorType.FileReadError)
@@ -64,8 +52,13 @@ class ViewModel(
 
     fun onKeyEvent(event: KeyEvent): Boolean {
         return if ((event.isCtrlPressed || event.isMetaPressed) && event.key == Key.V) {
-            viewModelState.value = getStateFromClipboardData()
-            true
+            val state = viewModelState.value
+            if(state is State.Content) {
+                false
+            } else {
+                viewModelState.value = getStateFromClipboardData()
+                true
+            }
         } else if(event.key == Key.DirectionDown || event.key == Key.Enter) {
             val newState = getStateFromSearchDirectionEvent(isDownEvent = true)
             viewModelState.value = newState
@@ -77,6 +70,24 @@ class ViewModel(
         } else {
             false
         }
+    }
+
+    fun updateDisplayMode(displayMode: Contract.DisplayMode) {
+        val state = viewModelState.value
+        if(state is State.Content) {
+            viewModelState.value = state.copy(displayMode = displayMode)
+        }
+    }
+
+    fun updateJson(json: String) {
+        val state = viewModelState.value
+        if(state is State.Content) {
+            viewModelState.value = state.copy(json = json)
+        }
+    }
+
+    fun reset() {
+        viewModelState.value = State.Initial
     }
 
     private fun getStateFromClipboardData(): State {
@@ -92,13 +103,7 @@ class ViewModel(
             State.Content(
                 json = clipboardString,
                 searchDirection = null,
-                stats = Contract.Stats(
-                    filePath = "from clipboard",
-                    fileName = "n/a",
-                    fileSize = "n/a",
-                    fileReadTime = "n/a",
-                    fileLines = clipboardString.lines().count().toString()
-                )
+                displayMode = Contract.DisplayMode.Render,
             )
         } else {
             State.Error(error = Contract.ErrorType.CopyPasteError)
@@ -122,11 +127,5 @@ class ViewModel(
             }
             currentState.copy(searchDirection = newSearchDirection)
         } else currentState
-    }
-
-    fun showJsonParsingError(throwable: Throwable) {
-        viewModelState.value = State.Error(
-            error = Contract.ErrorType.JsonParserError(message = throwable.localizedMessage)
-        )
     }
 }
