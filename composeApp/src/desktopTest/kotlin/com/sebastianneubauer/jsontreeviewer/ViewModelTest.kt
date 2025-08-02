@@ -9,19 +9,22 @@ import org.junit.Test
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.assertEquals
-import kotlin.time.TestTimeSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ViewModelTest {
 
     private val dispatcher = UnconfinedTestDispatcher()
-    private val timeSource = TestTimeSource()
     private val json = "{\"Hello\": \"World\"}"
 
     private val underTest = ViewModel(
         coroutineScope = TestScope(dispatcher),
         ioDispatcher = dispatcher,
-        timeSource = timeSource
+    )
+
+    private val contentState = State.Content(
+        json = json,
+        searchDirection = null,
+        displayMode = Contract.DisplayMode.Render
     )
 
     private fun getFile(): File {
@@ -42,17 +45,7 @@ class ViewModelTest {
         underTest.updateDragAndDropState(DragAndDropState.Success(file))
 
         assertEquals(
-            expected = State.Content(
-                json = json,
-                searchDirection = null,
-                stats = Contract.Stats(
-                    filePath = file.path,
-                    fileName = file.name,
-                    fileSize = "0.02KB",
-                    fileReadTime = "0.000ms",
-                    fileLines = "1"
-                )
-            ),
+            expected = contentState,
             actual = underTest.state.value
         )
     }
@@ -101,15 +94,59 @@ class ViewModelTest {
     }
 
     @Test
-    fun `jsonTree parsing error returns Error state`() {
-        val throwable = Throwable(message = "")
-        underTest.showJsonParsingError(throwable)
+    fun `updateDisplayMode updates the Content state with the new DisplayMode`() {
+        // Arrange: Start in Content state with Render mode
+        val file = getFile()
+        underTest.updateDragAndDropState(DragAndDropState.Success(file))
+        assertEquals(
+            expected = contentState,
+            actual = underTest.state.value
+        )
+
+        underTest.updateDisplayMode(Contract.DisplayMode.Edit)
 
         assertEquals(
-            expected = State.Error(
-                error = Contract.ErrorType.JsonParserError(message = throwable.localizedMessage)
+            expected = contentState.copy(
+                displayMode = Contract.DisplayMode.Edit
             ),
             actual = underTest.state.value
         )
     }
+
+    @Test
+    fun `updateJson updates the Content state with the new json`() {
+        // Arrange: Start in Content state with Render mode
+        val file = getFile()
+        underTest.updateDragAndDropState(DragAndDropState.Success(file))
+        assertEquals(
+            expected = contentState,
+            actual = underTest.state.value
+        )
+
+        underTest.updateJson("hello")
+
+        assertEquals(
+            expected = contentState.copy(json = "hello"),
+            actual = underTest.state.value
+        )
+    }
+
+    @Test
+    fun `reset updates the state to the initial state`() {
+        // Arrange: Start in Content state with Render mode
+        val file = getFile()
+        underTest.updateDragAndDropState(DragAndDropState.Success(file))
+        assertEquals(
+            expected = contentState,
+            actual = underTest.state.value
+        )
+
+        underTest.reset()
+
+        assertEquals(
+            expected = State.Initial,
+            actual = underTest.state.value
+        )
+    }
+
 }
